@@ -1,0 +1,62 @@
+
+name: Build CleanCAD APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout CleanCAD with submodules
+        uses: actions/checkout@v4
+        with:
+          repository: june690602-blip/opendwg
+          ref: main
+          submodules: recursive
+          path: source
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: source/**/gradle-wrapper.properties
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" \
+            "build-tools;35.0.0" "cmake;3.22.1" \
+            "ndk;27.2.12479018"
+
+      - name: Inspect project structure
+        run: |
+          echo "Project files:"
+          find source -maxdepth 3 \
+            \( -name gradlew -o -name settings.gradle \
+            -o -name settings.gradle.kts \
+            -o -name build.gradle -o -name CMakeLists.txt \) \
+            -print
+
+      - name: Build debug APK
+        working-directory: source
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CleanCAD-APK
+          path: source/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retenti
+          on-days: 7
