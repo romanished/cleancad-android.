@@ -58,5 +58,4 @@ jobs:
           name: CleanCAD-APK
           path: source/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retenti
-          on-days: 7
+          retention-days: 7
